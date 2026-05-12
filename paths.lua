@@ -46,7 +46,7 @@ local pelagiadTavern = {
 local gnisisPavilion = {
     {   -- южнее павильона
         minX = -89566, maxX = -79840,
-        minY = 96354, maxY = 85000,
+        minY = 88000, maxY = 96354,
         points = {
             {x = -86750, y = 96469, z = 1556},
         },
@@ -55,10 +55,6 @@ local gnisisPavilion = {
 
 local function inRange(val, min, max)
     return val > min and val < max
-end
-
-local function notInRange(val, min, max)
-    return val < min or val > max
 end
 
 -- Маршрут подхода к укрытию, если NPC выбрал его, и находится в указанном range
@@ -138,12 +134,19 @@ M.getShelterZonePath = function(originPoint, shelterName)
 
     -- Перебираем все зоны, зарегистрированные для данного shelterName
     for _, zone in ipairs(zones) do
-        local check = zone.notInRange and notInRange or inRange
-        local inX = check(originPoint.x, zone.minX, zone.maxX)
-        local inY = check(originPoint.y, zone.minY, zone.maxY)
+        local inX = inRange(originPoint.x, zone.minX, zone.maxX)
+        local inY = inRange(originPoint.y, zone.minY, zone.maxY)
 
-        if inX and inY then
-            return zone.points
+        local isInside = inX and inY
+
+        if zone.notInRange then
+            if not isInside then
+                return zone.points
+            end
+        else
+            if isInside then
+                return zone.points
+            end
         end
     end
 
@@ -208,12 +211,19 @@ local originZones = {
 M.getOriginZonePath = function(originPoint)
     for _, data in pairs(originZones) do
         for _, zone in ipairs(data) do
-            local check = zone.notInRange and notInRange or inRange
-            local inX = check(originPoint.x, zone.minX, zone.maxX)
-            local inY = check(originPoint.y, zone.minY, zone.maxY)
+            local inX = inRange(originPoint.x, zone.minX, zone.maxX)
+            local inY = inRange(originPoint.y, zone.minY, zone.maxY)
 
-            if inX and inY then
-                return zone.points
+            local isInside = inX and inY
+
+            if zone.notInRange then
+                if not isInside then
+                    return zone.points
+                end
+            else
+                if isInside then
+                    return zone.points
+                end
             end
         end
     end
